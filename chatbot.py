@@ -8,8 +8,11 @@ import pandas as pd
 import random
 
 # Download NLTK resources
-nltk.download('punkt')
-nltk.download('vader_lexicon')
+
+
+nltk.download("punkt")
+nltk.download("vader_lexicon")
+
 
 # Load sentiment analyzer
 sia = SentimentIntensityAnalyzer()
