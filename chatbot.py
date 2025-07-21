@@ -1,42 +1,35 @@
 # chatbot.py
 import streamlit as st
 import nltk
-from nltk.sentiment import SentimentIntensityAnalyzer
-from nltk import NaiveBayesClassifier
-from nltk.tokenize import word_tokenize
 import pandas as pd
 import random
+from nltk.sentiment import SentimentIntensityAnalyzer
+from nltk import NaiveBayesClassifier, word_tokenize
 
-# Download NLTK resources
-
-
+# ✅ Download resources outside the cached function (RUNS ONCE)
 nltk.download("punkt")
 nltk.download("vader_lexicon")
 
-
-# Load sentiment analyzer
+# ✅ Sentiment Analyzer
 sia = SentimentIntensityAnalyzer()
 
-# Load and preprocess the dataset
+# ✅ Format function
+def format_sentence(sent):
+    return {word: True for word in word_tokenize(sent.lower())}
+
+# ✅ Training the model (caches only data & model, not downloads)
 @st.cache_resource
 def train_model():
-    url = "https://raw.githubusercontent.com/ksaikishore09/modifieddataset/refs/heads/main/enhanced_chatbot_dataset_with_sentiment.csv"
-    data = pd.read_csv(url)
-
-    def format_sentence(sent):
-        return {word: True for word in word_tokenize(sent.lower())}
-
+    data = pd.read_csv("https://raw.githubusercontent.com/ksaikishore09/modifieddataset/refs/heads/main/enhanced_chatbot_dataset_with_sentiment.csv")
     features = [(format_sentence(row["Message"]), row["Response"]) for _, row in data.iterrows()]
     random.shuffle(features)
-
     classifier = NaiveBayesClassifier.train(features)
-    return classifier, format_sentence
+    return classifier
 
-classifier, format_sentence = train_model()
+classifier = train_model()
 
-# Streamlit UI
+# ✅ Streamlit UI
 st.title("🤖 Sentiment-Aware Chatbot")
-st.write("Type a message and let the bot respond with sentiment awareness!")
 
 user_input = st.text_input("You:")
 
@@ -45,13 +38,13 @@ if user_input:
     compound = sentiment["compound"]
 
     if compound >= 0.05:
-        label = "😊 Positive"
+        sentiment_label = "😊 Positive"
     elif compound <= -0.05:
-        label = "😞 Negative"
+        sentiment_label = "😞 Negative"
     else:
-        label = "😐 Neutral"
+        sentiment_label = "😐 Neutral"
 
     response = classifier.classify(format_sentence(user_input))
 
     st.markdown(f"**🤖 Bot:** {response}")
-    st.markdown(f"**Sentiment:** {label} (Score = {compound})")
+    st.markdown(f"**🧭 Sentiment:** {sentiment_label} (Score: {compound})")
